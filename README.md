@@ -1,8 +1,28 @@
 # Calculator
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/calculator`. To experiment with that code, run `bin/console` for an interactive prompt.
+Requirements:
+Calculator which calculates commission amount and net amount depending on input params.
 
-TODO: Delete this and the text above, and describe your gem
+1. Write Ruby gem - Calculator, which calculates commission amount and net
+    amount depending on input params
+2. Input
+     - amount *required
+     - commission_amount *optional
+     - commission_percent *optional
+     - commission_entity(user, product) *optional
+     Output -
+    [net_amount, commission_amount]
+3. If there's no commission - then it's set by default.
+4. Possibility to change commission depending on:
+     - product type
+     - user
+     - product price(amount)
+5. Code should be covered with unit tests.
+6. Possibility to calculate commission with two digits after decimal point precision.
+    Calculator.call(amount: 100, commission_amount: 1.0, commission_percent: 20)
+    commission_total = 100.0 * 0.2 + 1.0 = 21.0
+    net_amount = 100.0 - 21.0 = 79.0
+     => [79.0, 21.0]
 
 ## Installation
 
