@@ -106,6 +106,15 @@ RSpec.describe Calculator do
         expect(Calculator.call(call_args)).to eq(expected_result)
       end
 
+      it 'calculates commission amount with just Product entity and huge amount provided' do
+        user            = Product.new(product_type: ProductType.new(extra_commission: 0.17))
+        call_args       = {amount:            1_200_000,
+                           commission_entity: user}
+        expected_result = [1_115_999.0.to_d.round(2),
+                           84_001.0.to_d.round(2)]
+        expect(Calculator.call(call_args)).to eq(expected_result)
+      end
+
     end
 
     context 'The call() method should raise ArgumentError when passed invalid arguments:' do

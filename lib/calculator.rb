@@ -22,7 +22,11 @@ require 'calculator/version'
 #     net_amount = 100.0 - 21.0 = 79.0
 #      => [79.0, 21.0]
 module Calculator
-  VALID_COMMISSION_ENTITIES = %w[user product].freeze
+  VALID_COMMISSION_ENTITIES     = %w[user product].freeze
+  AMOUNTS_COMMISSION_CORRECTION = {(0..100_000)                    => 0.0,
+                                   (100_001..300_000)              => -0.1,
+                                   (300_001..500_000)              => -0.2,
+                                   (500_001..BigDecimal::INFINITY) => -0.3}.freeze
 
   class << self
     def call(amount:,
@@ -77,7 +81,7 @@ module Calculator
     # TODO: need to verify logic here
     def valid_commission_entity?(commission_entity)
       commission_entity.nil? ||
-        valid_commission_entity_class?(commission_entity)
+          valid_commission_entity_class?(commission_entity)
     end
 
     def valid_commission_entity_class?(commission_entity)
@@ -89,7 +93,7 @@ module Calculator
     # TODO: need to verify logic here
     def get_amounts_entity(amount, commission_amount, commission_percent, commission_entity)
       if class_name_match?(commission_entity, 'User')
-        commission_amount = user_commission_amount commission_entity
+        commission_amount  = user_commission_amount commission_entity
         commission_percent = user_commission_percent(commission_entity)
       elsif class_name_match?(commission_entity, 'Product')
         commission_percent += product_extra_commission(commission_entity)
@@ -110,14 +114,23 @@ module Calculator
     end
 
     def class_name_match?(commission_entity, class_name)
-      commission_entity.class.to_s.casecmp(class_name).zero?
+      commission_entity.class.to_s == class_name
     end
 
     def get_amounts_no_entity(amount, commission_amount, commission_percent)
-      commission_total = ((amount * commission_percent) + commission_amount).round(2)
-      net_amount       = (amount - commission_total).round(2)
+      corrected_commission_percent = correct_percent_to_amount amount, commission_percent
+      commission_percent           = corrected_commission_percent < 0 ? 0 : corrected_commission_percent
+      commission_total             = ((amount * commission_percent) + commission_amount).round(2)
+      net_amount                   = (amount - commission_total).round(2)
       raise ArgumentError, 'Total commission should not exceed amount!' if net_amount < 0
       [net_amount, commission_total]
+    end
+
+    def correct_percent_to_amount(amount, commission_percent)
+      AMOUNTS_COMMISSION_CORRECTION.each do |range, correction|
+        return (commission_percent += correction) if amount.in? range
+      end
+      amount
     end
   end
 end
