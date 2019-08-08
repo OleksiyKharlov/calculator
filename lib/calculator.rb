@@ -22,11 +22,9 @@ require 'calculator/version'
 #     net_amount = 100.0 - 21.0 = 79.0
 #      => [79.0, 21.0]
 module Calculator
-
   VALID_COMMISSION_ENTITIES = %w[user product].freeze
 
   class << self
-
     def call(amount:,
              commission_amount: nil,
              commission_percent: nil,
@@ -79,7 +77,7 @@ module Calculator
     # TODO: need to verify logic here
     def valid_commission_entity?(commission_entity)
       commission_entity.nil? ||
-          valid_commission_entity_class?(commission_entity)
+        valid_commission_entity_class?(commission_entity)
     end
 
     def valid_commission_entity_class?(commission_entity)
@@ -90,15 +88,28 @@ module Calculator
 
     # TODO: need to verify logic here
     def get_amounts_entity(amount, commission_amount, commission_percent, commission_entity)
-      if class_name_match? commission_entity, 'User'
-        commission_amount += 10
-      elsif class_name_match? commission_entity, 'Product'
-        commission_percent += 0.05
+      if class_name_match?(commission_entity, 'User')
+        commission_amount = user_commission_amount commission_entity
+        commission_percent = user_commission_percent(commission_entity)
+      elsif class_name_match?(commission_entity, 'Product')
+        commission_percent += product_extra_commission(commission_entity)
       end
       get_amounts_no_entity amount, commission_amount, commission_percent
     end
 
-    def class_name_match? commission_entity, class_name
+    def product_extra_commission commission_entity
+      (commission_entity&.product_type&.extra_commission_rate) || 0
+    end
+
+    def user_commission_percent commission_entity
+      ((commission_entity&.commission_percent || 0) / 100.0).to_d
+    end
+
+    def user_commission_amount user
+      (user&.commission_fixed_fee || 0).to_d.round(2)
+    end
+
+    def class_name_match?(commission_entity, class_name)
       commission_entity.class.to_s.casecmp(class_name).zero?
     end
 

@@ -1,18 +1,46 @@
 RSpec.describe Calculator do
-  class User
-  end
-
-  class Product
-  end
-
-  class WrongEntity
-  end
-
-  it "has a version number" do
-    expect(Calculator::VERSION).not_to be nil
-  end
-
   context "When testing the Calculator class" do
+    unless defined? User
+      class User
+        attr_reader :commission_percent, :commission_fixed_fee
+
+        def initialize(commission_percent: 0,
+                       commission_fixed_fee: 0)
+          @commission_percent   = commission_percent
+          @commission_fixed_fee = commission_fixed_fee
+        end
+      end
+    end
+
+    unless defined? Product
+      class Product
+        attr_reader :product_type
+
+        def initialize(product_type:)
+          raise ArgumentError, "product_type must be ProductType instance" unless product_type.is_a? ProductType
+          @product_type = product_type
+        end
+      end
+    end
+
+    unless defined? ProductType
+      class ProductType
+        attr_reader :extra_commission_rate
+
+        def initialize(extra_commission:)
+          @extra_commission_rate = extra_commission
+        end
+      end
+
+    end
+
+    class WrongEntity
+    end
+
+    it "has a version number" do
+      expect(Calculator::VERSION).not_to be nil
+    end
+
 
     context 'The call() method should return array of two elements when passed valid arguments:' do
 
@@ -33,44 +61,48 @@ RSpec.describe Calculator do
       end
 
       it 'calculates commission amount with User entity and all other args provided' do
-        user            = User.new
+        user            = User.new(commission_percent:   20,
+                                   commission_fixed_fee: 1)
         call_args       = {amount:             120,
                            commission_amount:  1.0,
                            commission_percent: 20,
                            commission_entity:  user}
-        expected_result = [85.0.to_d.round(2),
-                           35.0.to_d.round(2)]
+        expected_result = [95.0.to_d.round(2),
+                           25.0.to_d.round(2)]
         expect(Calculator.call(call_args)).to eq(expected_result)
       end
 
       it 'calculates commission amount with Product entity and all other args provided' do
         class Product
         end
-        product         = Product.new
+        product         = Product.new(product_type:
+                                          ProductType.new(extra_commission:
+                                                              0.17))
         call_args       = {amount:             120,
                            commission_amount:  1.0,
-                           commission_percent: 20,
+                           commission_percent: 10,
                            commission_entity:  product}
-        expected_result = [89.0.to_d.round(2),
-                           31.0.to_d.round(2)]
+        expected_result = [86.60.to_d.round(2),
+                           33.4.to_d.round(2)]
         expect(Calculator.call(call_args)).to eq(expected_result)
       end
 
-      it "calculates commission amount with just entity and amount provided" do
-        user            = User.new
+      it 'calculates commission amount with just entity and amount provided' do
+        user            = User.new(commission_percent:   20,
+                                   commission_fixed_fee: 1)
         call_args       = {amount:            100,
                            commission_entity: user}
-        expected_result = [69.0.to_d.round(2),
-                           31.0.to_d.round(2)]
+        expected_result = [79.0.to_d.round(2),
+                           21.0.to_d.round(2)]
         expect(Calculator.call(call_args)).to eq(expected_result)
       end
 
-      it "calculates commission amount with just Product entity and amount provided" do
-        user            = Product.new
-        call_args       = {amount:            100,
+      it 'calculates commission amount with just Product entity and amount provided' do
+        user            = Product.new(product_type: ProductType.new(extra_commission: 0.17))
+        call_args       = {amount:            120,
                            commission_entity: user}
-        expected_result = [74.0.to_d.round(2),
-                           26.0.to_d.round(2)]
+        expected_result = [74.60.to_d.round(2),
+                           45.40.to_d.round(2)]
         expect(Calculator.call(call_args)).to eq(expected_result)
       end
 
